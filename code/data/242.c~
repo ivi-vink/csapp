@@ -1,0 +1,6 @@
+#include <stdio.h>
+
+void main() {
+    int result = div16(16);
+    printf("%s", result)
+}
