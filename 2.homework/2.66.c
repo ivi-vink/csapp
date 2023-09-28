@@ -100,6 +100,8 @@ unsigned rotate_left(unsigned x, int n) {
 
   Check by truncating via shifting.
   This takes care of the positive and negative cases with logical or arithmetic shift back.
+
+  I also assumed w = 32
  */
 int fits_bits(int x, int n) {
     return x == (x<<(32-n))>>(32-n);
