@@ -277,51 +277,40 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-    int shift;
-    int shifted;
-    int is_not_done = ~0;
-
-    int ret = 0;
+    /* My original solution was a lot messier */
     int sign_bit = (x>>31);
-    int minus_one = ~0;
-    int is_zero = !(x ^ 0);
-    int is_minus_one = !(x ^ minus_one);
+    int b16, b8, b4, b2, b1, b0;
 
-    x = (~x & ~sign_bit) | (x & sign_bit);
-    /* 13 ops */
+    /* Take the number that is encoded by the positive bits  */
+    int u = (x & ~sign_bit) | (~x & sign_bit);
 
-    shift = 16;
-    shifted = x>>shift;
-    is_not_done = (!(shifted ^ minus_one) + minus_one);
-    ret += is_not_done & shift;
-    x = (is_not_done & shifted) | (~is_not_done & x);
+    /* unsigned u = x; */
+    /* any greater than 16? */
+    /*
+      0000 000C
+      0000 000C
+      0000 000C
+      0000 0003
+      0000 0001
 
-    shift = 8;
-    shifted = x>>shift;
-    is_not_done = (!(shifted ^ minus_one) + minus_one);
-    ret += is_not_done & shift;
-    x = (is_not_done & shifted) | (~is_not_done & x);
+     */
+    b16 = (!!(u>>16))<<4;
+    u >>= b16;
 
-    shift = 4;
-    shifted = x>>shift;
-    is_not_done = !(shifted ^ minus_one) + minus_one;
-    ret += is_not_done & shift;
-    x = (is_not_done & shifted) | (~is_not_done & x);
+    b8 = (!!(u>>8))<<3;
+    u >>= b8;
 
-    shift = 2;
-    shifted = x>>shift;
-    is_not_done = !(shifted ^ minus_one) + minus_one;
-    ret += is_not_done & shift;
-    x = (is_not_done & shifted) | (~is_not_done & x);
-    /* 4*10+13 ops */
+    b4 = (!!(u>>4))<<2;
+    u >>= b4;
 
-    shift = 1;
-    shifted = x>>shift;
-    is_not_done = !(shifted ^ minus_one) + minus_one;
-    ret += is_not_done & shift;
-    /* 4*10+13+6 = 59, with ret: 59 + 4 = 63 */
+    b2 = (!!(u>>2))<<1;
+    u >>= b2;
 
-    return ret + 1 + !(is_zero | is_minus_one);
+    b1 = (!!(u>>1));
+    u >>= b1;
+
+    b0 = !!u;
+    return b16 + b8 + b4 + b2 + b1 + b0 + 1;
 }
 //float
 /*

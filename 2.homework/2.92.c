@@ -9,6 +9,15 @@ typedef unsigned float_bits;
 
 #define M ~0
 
+unsigned i2u(int i) {
+    union {
+        unsigned u;
+        int i;
+    } ui;
+    ui.i = i;
+    return ui.u;
+}
+
 float u2f(unsigned int my_u) {
     assert(sizeof(unsigned int) == sizeof(float));
     union {
@@ -139,10 +148,13 @@ float_bits float_half(float_bits f) {
           Normalized value.
          */
         unsigned half_exp = exp;
+        /* Can we halve with exp? */
         if ((half_exp - 1) == 0) {
+            /* Is it the value in the middle between norm and denorm? */
             if ((frac ^ 0x7FFFFF) == 0) {
                 frac = 0;
             } else {
+                /* Otherwise, normally divide the (1+f) by two */
                 half_exp -= 1;
                 if (frac&1 && frac^1) {
                     frac >>= 1;
@@ -196,17 +208,126 @@ int float_f2i(float_bits f) {
 }
 
 float_bits float_i2f(int i) {
+    if (i==0) return 0;
+    /*
+      Need to calculate exp and frac based on integer, so we will take apart the integer into exp and frac using the fundamenal property of division.
+      p = q + r, where q and r are integers and q is the result of integer division of p
+     */
+    unsigned sign = i>>31;
+    int exp, frac, k, n, bias;
+
+    k = 8;
+    n = 23;
+    bias = (1<<(k-1))-1;
+    exp = bias;
+    frac = 0;
+
+    if (i==INT_MIN) {
+        /* Special case since ~i+1=i, if i=INT_MIN */
+        return (sign<<31) | ((exp+31)<<23) | 0;
+    }
+
+    /* Get the greatest power of 2, p2 and remainder */
+    int p2, rem;
+    int u = (i & ~sign) | ((~i + 1) & sign);
+    int u_orig = u;
+    int b16, b8, b4, b2, b1, b0;
+
+    b16 = (!!(u>>16))<<4;
+    u >>= b16;
+    b8 = (!!(u>>8))<<3;
+    u >>= b8;
+    b4 = (!!(u>>4))<<2;
+    u >>= b4;
+    b2 = (!!(u>>2))<<1;
+    u >>= b2;
+    b1 = (!!(u>>1));
+
+    p2 = b16 + b8 + b4 + b2 + b1;
+    exp += p2;
+    rem = u_orig - (1<<p2);
+
+    /* How much greater than precision are we */
+    int prec = (p2-23);
+    int prec2 = (1<<prec);
+
+    if (rem == 0) {
+        frac = 0;
+    } else {
+        if (p2 > 23) {
+            /* Outside of float32 precision */
+
+            /* Special case, Is remainder greater than half precision removed from highest power? */
+            if ((1<<p2) - (prec2>>1) <= rem) {
+                /* Round up into next power level */
+                frac = 0;
+                exp += 1;
+            } else {
+                /* Encode remainder as fraction with prec denom */
+                frac = rem>>prec;
+                if (prec>1) {
+                    /* Rounding is non binary, need to check if round to even applies or round up */
+                    int r = rem%prec2;
+                    if (r > (prec2>>1)) {
+                        frac += 1;
+                    } else if (r==(prec2>>1)) {
+                        frac += frac&1;
+                    }
+                } else {
+                    /* Binary rounding is easy, even rem don't need it and odd rem need it if the result is odd */
+                    frac += rem&1 && frac&1;
+                }
+            }
+        } else {
+            /* Within precision, just encode remainder as fraction with prec denom */
+            frac = (rem<<(23-p2));
+        }
+    }
+    return (sign<<31) | (exp<<23) | frac;
+    /*
+      1 1001 1101 [0]+
+      1 1001 1100 [1]+
+     */
+    /*
+      Denormalized
+       V = M * 2^E
+       M = f < 1-e
+       E = 1 - bias
+       <=> V < 1
+
+       Normalized
+       M = 1 + f
+       V = 1 = 2^E *(1+f)    <==>    e>=bias, e=bias <=> V=(2^0)(1+f)
+       E = e-bias
+       bias=127
+
+       smallest int
+       -(2^31)
+       biggest int
+       (2^31)-1
+       1 <> 0 0111 1111 [0]+
+       2 <> 0 1000 0000 [0]+
+       3 <> 0 1000 0000 1[0]+
+       4 <> 0 1000 0001 [0]+
+       5 <> 0 1000 0001 01[0]+
+       6 <> 0 1000 0001 1[0]+
+       7 <> 0 1000 0001 11[0]+
+       8 <> 0 1000 0010 000[0]+
+       9 <> 0 1000 0010 001[0]+
+       10 <> 0 1000 0010 010[0]+
+       11 <> 0 1000 0010 011[0]+
+     */
     return 1;
 }
 
 int main(void) {
     /* 2.97 */
     int j;
-    printf("%d\n", INT_MIN);
-    printf("%d\n", INT_MAX);
     for (j=INT_MIN; j<INT_MAX; j++) {
         float v = u2f(float_i2f(j));
         int result = (((float) j) == v);
+            /* show_float((float) j); */
+            /* show_float(v); */
         if (!result) {
             printf("want: %f, got: %f\n", ((float) j), v);
             show_float((float) j);

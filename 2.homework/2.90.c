@@ -55,6 +55,19 @@ float fpwr2(int x)
 
 
 int main(void) {
+
+    /* 2.90 */
+    printf("%f\n", fpwr2(-1));  /* 65536 */
+    printf("%f\n", fpwr2(16));  /* 65536 */
+    printf("%f\n", fpwr2(15));  /* 32768 */
+    printf("%f\n", fpwr2(14));  /* 16384 */
+    printf("%f\n", fpwr2(13));  /* 8192 */
+    printf("%f\n", fpwr2(12));  /* 4096 */
+    printf("%f\n", fpwr2(11));  /* 2048 */
+    printf("%f\n", fpwr2(10));  /* 1024 */
+    printf("%f\n", fpwr2(128));
+    return 0;
+
     /* 2.91 */
     printf("%x\n", 0b01000000010010010000111111011011);
     /*
@@ -86,6 +99,7 @@ int main(void) {
     return 0;
 
     /* 2.90 */
+    printf("%f\n", fpwr2(-1));  /* 65536 */
     printf("%f\n", fpwr2(16));  /* 65536 */
     printf("%f\n", fpwr2(15));  /* 32768 */
     printf("%f\n", fpwr2(14));  /* 16384 */
